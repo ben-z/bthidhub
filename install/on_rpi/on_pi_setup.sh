@@ -1,3 +1,6 @@
+set -x # print commands executed
+set -e # exit on error
+
 cd /home/pi/bthidhub/install/on_rpi
 
 sudo echo 0 | sudo tee /sys/class/leds/led0/brightness > /dev/null
@@ -22,7 +25,7 @@ systemctl --user stop obex
 systemctl --user disable obex
 systemctl --user mask obex
 
-sudo apt-get install git libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf automake libtool python3-pip -y
+sudo apt-get install git libdbus-1-dev libglib2.0-dev libudev-dev libical-dev libreadline-dev autoconf automake libtool python3-pip libgirepository1.0-dev libcairo2-dev -y
 
 sudo pip3 install dasbus
 sudo pip3 install asyncio
