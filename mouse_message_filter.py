@@ -49,25 +49,55 @@ from hid_message_filter import HIDMessageFilter
 
 class MouseMessageFilter(HIDMessageFilter):
     def __init__(self):
-        self.message_size = 7
+        self.message_size = 5
 
     def filter_message_to_host(self, msg):
         if len(msg) != self.message_size:
+            print(f"WARMING: {len(msg)} != {self.message_size}, msg: {msg}")
             return None
-        msg = b'\xa1\x03' + self.get_buttons_flags(msg) + self.get_x(msg) + self.get_y(msg) + self.get_wheel(msg)
+        x = self.get_x(msg)
+        y = self.get_y(msg)
+        #print(f"x: {x}, y: {y}")
+        msg = b'\xa1\x03' + self.get_buttons_flags(msg) + x + y + self.get_wheel(msg)
         return msg
 
     def get_buttons_flags(self, msg):
-        return msg[0:2]
+        #return msg[0:2]
+        #return b'\x00' + msg[0:1]
+        val = int.from_bytes(msg[0:1], "little")
+        #return msg[0:1] + b'\x00'
+        return val.to_bytes(2, "little")
 
     def get_x(self, msg):
-        return msg[2:4]
+        #return msg[2:4]
+        #return b'\x00' + msg[1:2]
+        #return b'\x00\x00'
+        #return msg[1:2] + b'\x00'
+        raw_val = int.from_bytes(msg[1:3], "little")
+        val = (raw_val & 0x7ff)
+        is_negative = bool(raw_val & 0x800)
+        if is_negative:
+            val = val - 0x800
+        #print(f"x: is_negative: {is_negative}, x: {val}")
+        return val.to_bytes(2, "little", signed=True)
 
     def get_y(self, msg):
-        return msg[4:6]
+        #return msg[4:6]
+        #return b'\x00' + msg[2:3]
+        #return b'\x00\x00'
+        #val = (int.from_bytes(msg[2:4], "little") & 0x0fff)
+        #return val.to_bytes(2, "little")
+        raw_val = int.from_bytes(msg[2:4], "little")
+        val = (raw_val & 0x7ff0) >> 4
+        is_negative = bool(raw_val & 0x800)
+        if is_negative:
+            val = val - 0x800
+        #print(f"y: is_negative: {is_negative}, x: {val}")
+        return val.to_bytes(2, "little", signed=True)
 
     def get_wheel(self, msg):
-        return msg[6:7]
+        #return msg[6:7]
+        return msg[4:5]
 
     def filter_message_from_host(self, msg):
         return None
